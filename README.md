@@ -12,33 +12,6 @@ Este proyecto implementa una stack completa de monitoreo y observabilidad utiliz
 - **Grafana**: Plataforma de visualización que permite crear dashboards interactivos combinando métricas y logs.
 - **Aplicación Node.js**: Servidor HTTP de ejemplo que expone métricas y genera logs estructurados en formato JSON.
 
-### Arquitectura del Sistema
-
-```
-┌─────────────────┐
-│   Aplicación    │
-│    Node.js      │──► Expone métricas (/metrics)
-│                 │──► Genera logs JSON (stdout)
-└─────────────────┘
-        │
-        ├──► Logs ────────► ┌──────────────┐
-        │                   │   Promtail   │──► Recolecta y envía
-        │                   └──────────────┘
-        │                           │
-        │                           ▼
-        │                   ┌──────────────┐
-        │                   │     Loki     │──► Almacena logs
-        │                   └──────────────┘
-        │                           │
-        └──► Métricas ────► ┌──────────────┐
-                            │  Prometheus  │──► Almacena métricas
-                            └──────────────┘
-                                    │
-                            ┌───────┴───────┐
-                            │    Grafana    │──► Visualiza datos
-                            └───────────────┘
-```
-
 ## Requisitos Previos
 
 - Docker (versión 20.10 o superior)
@@ -84,7 +57,7 @@ cd grafana-prometheus-loki
 ### 3. Iniciar los Servicios
 
 ```bash
-docker-compose up -d
+docker compose up -d
 ```
 
 Este comando iniciará todos los servicios en segundo plano:
@@ -97,7 +70,7 @@ Este comando iniciará todos los servicios en segundo plano:
 ### 4. Verificar el Estado de los Contenedores
 
 ```bash
-docker-compose ps
+docker compose ps
 ```
 
 Todos los contenedores deben mostrar estado "Up".
@@ -262,113 +235,24 @@ curl -s http://localhost:9090/api/v1/targets | grep -o '"health":"[^"]*"'
 curl -s http://localhost:3100/loki/api/v1/label/container/values
 ```
 
-## Cambios e Implementaciones Realizadas
-
-### 1. Configuración de Loki (feat: añadir servicio Loki)
-
-- Implementación de Loki 3.0.0 para almacenamiento de logs
-- Configuración de schema v13 con TSDB para mejor rendimiento
-- Modo single-binary para simplicidad en desarrollo
-- Volumen persistente para chunks y reglas
-
-### 2. Integración de Promtail (feat: añadir Promtail)
-
-- Configuración de Docker Service Discovery
-- Montaje de socket Docker para acceso a logs de contenedores
-- Pipeline de procesamiento para extraer campos JSON
-- Labels automáticos (container, service, stream)
-
-### 3. Datasource de Loki en Grafana (ci: añadir datasource)
-
-- Provisioning automático mediante archivos YAML
-- Configuración de conexión a Loki vía red interna Docker
-- Límite de 1000 líneas por query para rendimiento
-
-### 4. Logs Estructurados en la Aplicación (feat: implementar logs JSON)
-
-- Migración de console.log a Pino
-- Formato JSON con timestamps ISO 8601
-- Metadata contextual en cada log (method, url, duration, statusCode)
-- Separación de logs de métricas y requests normales
-
-### 5. Dashboard Integrado (feat: crear dashboard de monitoreo)
-
-- Provisioning automático del dashboard
-- Combinación de métricas de Prometheus y logs de Loki
-- Paneles informativos y gráficos de tendencias
-- Variables para filtrado dinámico
-
-### 6. Mejoras en el Dockerfile (feat: añadir dependencias)
-
-- Separación de COPY para aprovechar caché de Docker
-- Instalación de dependencias antes de copiar código fuente
-- Reducción de tiempo de rebuild durante desarrollo
-
-## Troubleshooting
-
-### Los contenedores no inician
-
-```bash
-# Ver logs de un servicio específico
-docker-compose logs [servicio]
-
-# Ejemplos
-docker-compose logs loki
-docker-compose logs promtail
-docker-compose logs app
-```
-
-### Prometheus no muestra métricas
-
-```bash
-# Verificar que la app esté exponiendo métricas
-curl http://localhost:3000/metrics
-
-# Verificar targets en Prometheus
-curl http://localhost:9090/api/v1/targets
-```
-
-### Loki no muestra logs
-
-```bash
-# Verificar que Promtail esté enviando logs
-docker-compose logs promtail | grep "error"
-
-# Verificar conectividad con Loki
-curl http://localhost:3100/ready
-
-# Ver labels disponibles en Loki
-curl http://localhost:3100/loki/api/v1/labels
-```
-
-### Grafana no muestra el dashboard
-
-```bash
-# Reiniciar Grafana
-docker-compose restart grafana
-
-# Verificar provisioning
-docker-compose exec grafana ls -la /etc/grafana/provisioning/dashboards/
-```
-
 ## Detener y Limpiar
 
 ### Detener servicios
 
 ```bash
-docker-compose down
+docker compose down
 ```
 
 ### Detener y eliminar volúmenes
 
 ```bash
-docker-compose down -v
+docker compose down -v
 ```
 
 ### Limpiar completamente
 
 ```bash
-docker-compose down -v --remove-orphans
+docker compose down -v --remove-orphans
 docker system prune -a
 ```
 
@@ -380,11 +264,3 @@ docker system prune -a
 - [Grafana Provisioning](https://grafana.com/docs/grafana/latest/administration/provisioning/)
 - [Prom-client npm package](https://github.com/siimon/prom-client)
 - [Pino Logger](https://getpino.io/)
-
-## Licencia
-
-ISC
-
-## Autor
-
-Walter Leturia
