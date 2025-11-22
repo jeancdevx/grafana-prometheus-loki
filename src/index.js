@@ -1,5 +1,11 @@
 const http = require("http");
 const client = require("prom-client");
+const pino = require("pino");
+
+const logger = pino({
+  level: "info",
+  timestamp: pino.stdTimeFunctions.isoTime,
+});
 
 const hostname = "0.0.0.0";
 const port = 3000;
@@ -13,10 +19,18 @@ const counter = new client.Counter({
 });
 register.registerMetric(counter);
 
+logger.info({ hostname, port }, "Iniciando servidor HTTP");
+
 const server = http.createServer(async (req, res) => {
+  const requestStart = Date.now();
+
   if (req.url === "/metrics") {
     res.setHeader("Content-Type", register.contentType);
     res.end(await register.metrics());
+    logger.info(
+      { method: req.method, url: req.url, duration: Date.now() - requestStart },
+      "Métricas servidas"
+    );
     return;
   }
 
@@ -24,10 +38,20 @@ const server = http.createServer(async (req, res) => {
 
   res.statusCode = 200;
   res.setHeader("Content-Type", "text/plain");
-  console.log("Query");
-  res.end("Hello World from Node.js!\n");
+  const response = "Hello World from Node.js!\n";
+  res.end(response);
+
+  logger.info(
+    {
+      method: req.method,
+      url: req.url,
+      statusCode: res.statusCode,
+      duration: Date.now() - requestStart,
+    },
+    "Request procesada"
+  );
 });
 
 server.listen(port, hostname, () => {
-  console.log(`Server running at http://${hostname}:${port}/`);
+  logger.info({ hostname, port }, "Servidor corriendo exitosamente");
 });
