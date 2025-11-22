@@ -30,3 +30,17 @@ services:
       context: ./src
     ports:
       - "3000:3000"
+
+  loki:
+    image: grafana/loki:3.0.0
+    container_name: loki
+    command: -config.file=/etc/loki/loki-config.yml
+    ports:
+      - "3100:3100"
+    volumes:
+      - ./loki/loki-config.yml:/etc/loki/loki-config.yml:ro
+      - loki-data:/loki
+    restart: unless-stopped
+
+volumes:
+  loki-data:
