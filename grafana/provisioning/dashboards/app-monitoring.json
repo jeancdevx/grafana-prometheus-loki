@@ -1,0 +1,159 @@
+{
+  "id": null,
+  "uid": "app-monitoring",
+  "title": "Monitoreo Aplicación Node.js",
+  "tags": ["nodejs", "prometheus", "loki"],
+  "timezone": "browser",
+  "schemaVersion": 16,
+  "version": 1,
+  "refresh": "5s",
+  "panels": [
+      {
+        "id": 1,
+        "gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 },
+        "type": "graph",
+        "title": "HTTP Requests Total",
+        "targets": [
+          {
+            "expr": "http_requests_total",
+            "refId": "A",
+            "datasource": {
+              "type": "prometheus",
+              "uid": "PBFA97CFB590B2093"
+            }
+          }
+        ],
+        "yaxes": [
+          { "format": "short", "label": "Requests" },
+          { "format": "short" }
+        ]
+      },
+      {
+        "id": 2,
+        "gridPos": { "h": 8, "w": 12, "x": 12, "y": 0 },
+        "type": "graph",
+        "title": "HTTP Request Rate",
+        "targets": [
+          {
+            "expr": "rate(http_requests_total[1m])",
+            "refId": "A",
+            "datasource": {
+              "type": "prometheus",
+              "uid": "PBFA97CFB590B2093"
+            }
+          }
+        ],
+        "yaxes": [
+          { "format": "reqps", "label": "Requests/sec" },
+          { "format": "short" }
+        ]
+      },
+      {
+        "id": 3,
+        "gridPos": { "h": 8, "w": 12, "x": 0, "y": 8 },
+        "type": "graph",
+        "title": "Process Memory Usage",
+        "targets": [
+          {
+            "expr": "process_resident_memory_bytes",
+            "refId": "A",
+            "datasource": {
+              "type": "prometheus",
+              "uid": "PBFA97CFB590B2093"
+            }
+          }
+        ],
+        "yaxes": [
+          { "format": "bytes", "label": "Memory" },
+          { "format": "short" }
+        ]
+      },
+      {
+        "id": 4,
+        "gridPos": { "h": 8, "w": 12, "x": 12, "y": 8 },
+        "type": "graph",
+        "title": "CPU Usage",
+        "targets": [
+          {
+            "expr": "rate(process_cpu_seconds_total[1m])",
+            "refId": "A",
+            "datasource": {
+              "type": "prometheus",
+              "uid": "PBFA97CFB590B2093"
+            }
+          }
+        ],
+        "yaxes": [
+          { "format": "percentunit", "label": "CPU" },
+          { "format": "short" }
+        ]
+      },
+      {
+        "id": 5,
+        "gridPos": { "h": 10, "w": 24, "x": 0, "y": 16 },
+        "type": "logs",
+        "title": "Application Logs",
+        "targets": [
+          {
+            "expr": "{container=\"app\"}",
+            "refId": "A",
+            "datasource": {
+              "type": "loki",
+              "uid": "P8E80F9AEF21F6940"
+            }
+          }
+        ],
+        "options": {
+          "showTime": true,
+          "showLabels": false,
+          "showCommonLabels": false,
+          "wrapLogMessage": false,
+          "sortOrder": "Descending"
+        }
+      },
+      {
+        "id": 6,
+        "gridPos": { "h": 8, "w": 12, "x": 0, "y": 26 },
+        "type": "bargauge",
+        "title": "Logs por URL",
+        "targets": [
+          {
+            "expr": "sum by (url) (count_over_time({container=\"app\"} | json | __error__=\"\" [30m]))",
+            "refId": "A",
+            "datasource": {
+              "type": "loki",
+              "uid": "P8E80F9AEF21F6940"
+            }
+          }
+        ],
+        "options": {
+          "orientation": "horizontal",
+          "displayMode": "gradient"
+        }
+      },
+      {
+        "id": 7,
+        "gridPos": { "h": 8, "w": 12, "x": 12, "y": 26 },
+        "type": "stat",
+        "title": "Total de Logs (últimos 30min)",
+        "targets": [
+          {
+            "expr": "sum(count_over_time({container=\"app\"} [30m]))",
+            "refId": "A",
+            "datasource": {
+              "type": "loki",
+              "uid": "P8E80F9AEF21F6940"
+            }
+          }
+        ],
+        "options": {
+          "graphMode": "area",
+          "colorMode": "value"
+        }
+    }
+  ],
+  "time": {
+    "from": "now-15m",
+    "to": "now"
+  }
+}
